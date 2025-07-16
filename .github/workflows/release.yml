@@ -43,4 +43,4 @@ jobs:
           
           # Hier ist die wichtige Änderung: Gib den gesamten 'platformResourcePresets/altv/' Ordner an
           files: |
-            platformResourcePresets/altv/
+            platformResourcePresets/altv/*
