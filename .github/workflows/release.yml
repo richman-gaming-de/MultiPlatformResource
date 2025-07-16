@@ -8,26 +8,39 @@ jobs:
   release:
     runs-on: [ self-hosted, richman-gaming ]
     permissions:
-      contents: write
+      contents: write # Wichtig: Erlaubt dem Workflow, Releases zu erstellen und Tags zu pushen
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 ist gut, wenn generate_release_notes: true verwendet wird,
+          # da es den gesamten Git-Verlauf für die Commit-Analyse holt.
+          fetch-depth: 0
 
-      # Optional: Build your assets here if needed
-      # - name: Build project
-      #   run: |
-      #     npm install
-      #     npm run build
-      #   # Ersetzen Sie dies durch Ihre tatsächlichen Build-Befehle
+      - name: Prepare AltV Release Directory
+        run: |
+          # Inhalt von src/ in das Zielverzeichnis kopieren
+          # Der Stern '*' stellt sicher, dass NUR der Inhalt von src/ kopiert wird,
+          # nicht der src/-Ordner selbst in assets/stream/
+          cp -r src/* platformResourcePresets/altv/assets/stream/
+
+          # Optional: Debugging - Zeigt den Inhalt des vorbereiteten Ordners
+          echo "Content of platformResourcePresets/altv/assets/stream/ after copy:"
+          ls -R platformResourcePresets/altv/assets/stream/
+        shell: bash # Sicherstellen, dass Bash für cp/mkdir verwendet wird, besonders wichtig auf Windows-Runnern
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            dist/debug/
-          draft: false # Setzen Sie dies auf true, wenn der Release zuerst als Entwurf erstellt werden soll
-          prerelease: false # Setzen Sie dies auf true, wenn es ein Pre-Release ist
+          # Wir verwenden den vom Tag abgeleiteten Namen und fügen '-assets' an
+          tag_name: ${{ github.ref_name }}-assets
+          name: Release ${{ github.ref_name }} (Build Assets)
+          draft: false
+          prerelease: false
           generate_release_notes: true # Generiert automatische Release-Notes basierend auf Commits
-          name: Release ${{ github.ref_name }} (Build Assets) # Name des Releases (z.B. Release v1.0.0)
-          tag_name: ${{ github.ref }}-assets # Der Tag, der den Workflow ausgelöst hat (z.B. v1.0.0)
+          
+          # Hier ist die wichtige Änderung: Gib den gesamten 'platformResourcePresets/altv/' Ordner an
+          files: |
+            platformResourcePresets/altv/
