@@ -34,7 +34,7 @@ jobs:
         run: |
           # Den gewünschten Namen für den obersten Ordner in der ZIP-Datei festlegen (Repository-Name)
           REPO_NAME="${{ github.event.repository.name }}"
-          ZIP_FILE_NAME="${REPO_NAME}-${{ github.ref_name }}.zip" # Benenne die ZIP-Datei dynamisch
+          ZIP_FILE_NAME="${REPO_NAME}-altv-${{ github.ref_name }}.zip" # Benenne die ZIP-Datei dynamisch
 
           SOURCE_FOLDER_TO_ZIP="platformResourcePresets/altv/" # Der Ordner, dessen INHALT wir zippen wollen
 
@@ -84,4 +84,4 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            ${{ github.event.repository.name }}-${{ github.ref_name }}.zip
+            ${{ github.event.repository.name }}-altv-${{ github.ref_name }}.zip
