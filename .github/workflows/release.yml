@@ -30,7 +30,24 @@ jobs:
           ls -R platformResourcePresets/altv/assets/stream/
         shell: bash # Sicherstellen, dass Bash für cp/mkdir verwendet wird, besonders wichtig auf Windows-Runnern
 
-      - name: Create Release
+      - name: Create AltV Release Archive (ZIP) 
+        run: |
+          ZIP_FILE_NAME="altv-resource-${{ github.ref_name }}.zip" # Benenne die ZIP-Datei dynamisch
+          TARGET_FOLDER_TO_ZIP="platformResourcePresets/altv/" # Der Ordner, den wir zippen wollen
+
+          echo "Creating ZIP archive for: $TARGET_FOLDER_TO_ZIP"
+          echo "ZIP file will be named: $ZIP_FILE_NAME"
+
+          # Wechsle das Verzeichnis ins übergeordnete Verzeichnis, damit 'altv/' im ZIP auf oberster Ebene ist
+          cd $(dirname "$TARGET_FOLDER_TO_ZIP") # Geht zu 'platformResourcePresets/'
+          zip -r "../$ZIP_FILE_NAME" $(basename "$TARGET_FOLDER_TO_ZIP") # Zippt 'altv/' und legt ZIP eine Ebene höher ab
+
+          echo "Successfully created ZIP: $ZIP_FILE_NAME"
+          # Debugging: Zeige die erstellte ZIP-Datei im Root-Verzeichnis des Workflows
+          ls -l "../$ZIP_FILE_NAME"
+        shell: bash
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
@@ -39,8 +56,8 @@ jobs:
           name: Release ${{ github.ref_name }} (Build Assets)
           draft: false
           prerelease: false
-          generate_release_notes: true # Generiert automatische Release-Notes basierend auf Commits
-          
-          # Hier ist die wichtige Änderung: Gib den gesamten 'platformResourcePresets/altv/' Ordner an
+          # Generiert automatische Release-Notes basierend auf Commits
+          generate_release_notes: true
+
           files: |
-            platformResourcePresets/altv/*
+            altv-resource-${{ github.ref_name }}.zip # <-- Die dynamisch benannte ZIP-Datei
