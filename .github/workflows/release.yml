@@ -29,8 +29,9 @@ jobs:
             # Zum Beispiel:
             # dist/my-app.zip
             # build/release-notes.txt
+            dist/debug
           draft: false # Setzen Sie dies auf true, wenn der Release zuerst als Entwurf erstellt werden soll
           prerelease: false # Setzen Sie dies auf true, wenn es ein Pre-Release ist
           generate_release_notes: true # Generiert automatische Release-Notes basierend auf Commits
-          name: Release ${{ github.ref_name }} # Name des Releases (z.B. Release v1.0.0)
-          tag_name: ${{ github.ref }}a # Der Tag, der den Workflow ausgelöst hat (z.B. v1.0.0)
+          name: Release ${{ github.ref_name }} (Build Assets) # Name des Releases (z.B. Release v1.0.0)
+          tag_name: ${{ github.ref }}-assets # Der Tag, der den Workflow ausgelöst hat (z.B. v1.0.0)
