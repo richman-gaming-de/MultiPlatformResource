@@ -1,0 +1,88 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+' # Trigger bei Tags wie v1.0.0, v1.2.3
+
+jobs:
+  release:
+    runs-on: [ self-hosted, richman-gaming ]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare AltV Release Directory
+        run: |
+          cp -r src/* platformResourcePresets/altv/assets/stream/
+
+          echo "Content of platformResourcePresets/altv/assets/stream/ after copy:"
+          ls -R platformResourcePresets/altv/assets/stream/
+        shell: bash
+
+      - name: Create AltV Release Archive (ZIP)
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          ZIP_FILE_NAME="${REPO_NAME}-altv-${{ github.ref_name }}.zip"
+
+          SOURCE_FOLDER_TO_ZIP="platformResourcePresets/altv/"
+
+          echo "Creating ZIP archive for: $SOURCE_FOLDER_TO_ZIP"
+          echo "ZIP file will be named: $ZIP_FILE_NAME"
+          echo "Top-level folder inside ZIP will be: $REPO_NAME/"
+          
+          cd "$SOURCE_FOLDER_TO_ZIP"
+          mkdir -p "../../${REPO_NAME}"
+          cp -r * "../../${REPO_NAME}"
+          cd ../../
+          zip -r "$ZIP_FILE_NAME" "$REPO_NAME"/
+          echo "Successfully created ZIP: $ZIP_FILE_NAME"
+          ls -l "$ZIP_FILE_NAME"
+
+        shell: bash
+
+      - name: Prepare FiveM Release Directory
+        run: |
+          cp -r src/* platformResourcePresets/fiveM/stream/
+
+          echo "Content of platformResourcePresets/fiveM/stream/ after copy:"
+          ls -R platformResourcePresets/fiveM/stream/
+        shell: bash
+
+      - name: Create FiveM Release Archive (ZIP)
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          ZIP_FILE_NAME="${REPO_NAME}-fivem-${{ github.ref_name }}.zip"
+
+          SOURCE_FOLDER_TO_ZIP="platformResourcePresets/fivem/"
+
+          echo "Creating ZIP archive for: $SOURCE_FOLDER_TO_ZIP"
+          echo "ZIP file will be named: $ZIP_FILE_NAME"
+          echo "Top-level folder inside ZIP will be: $REPO_NAME/"
+          
+          cd "$SOURCE_FOLDER_TO_ZIP"
+          mkdir -p "../../${REPO_NAME}"
+          cp -r * "../../${REPO_NAME}"
+          cd ../../
+          zip -r "$ZIP_FILE_NAME" "$REPO_NAME"/
+          echo "Successfully created ZIP: $ZIP_FILE_NAME"
+          ls -l "$ZIP_FILE_NAME"
+
+        shell: bash
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: ${{ github.ref_name }}-assets
+          name: Release ${{ github.ref_name }} (Build Assets)
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ github.event.repository.name }}-altv-${{ github.ref_name }}.zip
+            ${{ github.event.repository.name }}-fivem-${{ github.ref_name }}.zip
