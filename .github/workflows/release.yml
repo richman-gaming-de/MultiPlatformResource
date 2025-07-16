@@ -58,7 +58,7 @@ jobs:
           REPO_NAME="${{ github.event.repository.name }}"
           ZIP_FILE_NAME="${REPO_NAME}-fivem-${{ github.ref_name }}.zip"
 
-          SOURCE_FOLDER_TO_ZIP="platformResourcePresets/fivem/"
+          SOURCE_FOLDER_TO_ZIP="platformResourcePresets/fiveM/"
 
           echo "Creating ZIP archive for: $SOURCE_FOLDER_TO_ZIP"
           echo "ZIP file will be named: $ZIP_FILE_NAME"
