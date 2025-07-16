@@ -25,11 +25,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            # Hier können Sie Pfade zu den Assets angeben, die Sie hochladen möchten.
-            # Zum Beispiel:
-            # dist/my-app.zip
-            # build/release-notes.txt
-            dist/debug
+            dist/debug/
           draft: false # Setzen Sie dies auf true, wenn der Release zuerst als Entwurf erstellt werden soll
           prerelease: false # Setzen Sie dies auf true, wenn es ein Pre-Release ist
           generate_release_notes: true # Generiert automatische Release-Notes basierend auf Commits
