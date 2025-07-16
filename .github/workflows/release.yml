@@ -60,4 +60,4 @@ jobs:
           generate_release_notes: true
 
           files: |
-            altv-resource-${{ github.ref_name }}.zip # <-- Die dynamisch benannte ZIP-Datei
+            altv-resource-${{ github.ref_name }}.zip
