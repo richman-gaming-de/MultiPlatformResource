@@ -1,23 +1,27 @@
-name: Release
+name: Attach Release Assets
+
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+' # Trigger bei Tags wie v1.0.0, v1.2.3
+  release:
+    types: [created] # Dieser Workflow wird ausgelöst, wenn ein GitHub Release erstellt wird
 
 jobs:
-  release:
+  build_and_attach_assets:
     runs-on: [ self-hosted, richman-gaming ]
     permissions:
-      contents: write
+      contents: write # Erlaubt dem Workflow, Assets zu einem Release hinzuzufügen
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        # fetch-depth: 0 wird entfernt, da generate_release_notes nicht mehr verwendet wird
+        # und der Standard-fetch-depth von 1 für diese Aufgabe ausreicht.
 
+      # --- AltV Build und ZIP-Erstellung ---
       - name: Prepare AltV Release Directory
         run: |
+          # Annahme: platformResourcePresets/altv/assets/stream/ existiert
+          # Annahme: src/ existiert und ist nicht leer
+
           cp -r src/* platformResourcePresets/altv/assets/stream/
 
           echo "Content of platformResourcePresets/altv/assets/stream/ after copy:"
@@ -25,9 +29,11 @@ jobs:
         shell: bash
 
       - name: Create AltV Release Archive (ZIP)
+        id: create_altv_zip # ID, um den ZIP-Dateinamen später zu referenzieren
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
-          ZIP_FILE_NAME="${REPO_NAME}-altv-${{ github.ref_name }}.zip"
+          RELEASE_TAG_NAME="${{ github.event.release.tag_name }}"
+          ZIP_FILE_NAME="${REPO_NAME}-altv-${RELEASE_TAG_NAME}.zip"
 
           SOURCE_FOLDER_TO_ZIP="platformResourcePresets/altv/"
 
@@ -35,18 +41,39 @@ jobs:
           echo "ZIP file will be named: $ZIP_FILE_NAME"
           echo "Top-level folder inside ZIP will be: $REPO_NAME/"
           
-          cd "$SOURCE_FOLDER_TO_ZIP"
-          mkdir -p "../../${REPO_NAME}"
-          cp -r * "../../${REPO_NAME}"
+          # 1. Erstelle ein temporäres Verzeichnis im Workflow-Root
+          TEMP_DIR="${REPO_NAME}-temp-altv"
+          mkdir -p "../../${TEMP_DIR}"
+          
+          # 2. Kopiere den Inhalt von 'altv/' in das temporäre Verzeichnis
+          (
+            cd "$SOURCE_FOLDER_TO_ZIP"
+            cp -r * "../../${TEMP_DIR}"
+          )
+
+          # 3. Wechsle zurück ins Root-Verzeichnis des Workflows
           cd ../../
-          zip -r "$ZIP_FILE_NAME" "$REPO_NAME"/
+
+          # 4. Zippe das umbenannte temporäre Verzeichnis
+          zip -r "$ZIP_FILE_NAME" "$TEMP_DIR"/
+          
           echo "Successfully created ZIP: $ZIP_FILE_NAME"
           ls -l "$ZIP_FILE_NAME"
+          
+          # Temporäres Verzeichnis aufräumen
+          rm -rf "$TEMP_DIR"
+
+          # Exportiere den ZIP-Dateinamen als Output dieses Schrittes
+          echo "ALT_ZIP_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_OUTPUT
 
         shell: bash
 
+      # --- FiveM Build und ZIP-Erstellung ---
       - name: Prepare FiveM Release Directory
         run: |
+          # Annahme: platformResourcePresets/fiveM/stream/ existiert
+          # Annahme: src/ existiert und ist nicht leer
+
           cp -r src/* platformResourcePresets/fiveM/stream/
 
           echo "Content of platformResourcePresets/fiveM/stream/ after copy:"
@@ -54,9 +81,11 @@ jobs:
         shell: bash
 
       - name: Create FiveM Release Archive (ZIP)
+        id: create_fivem_zip # ID, um den ZIP-Dateinamen später zu referenzieren
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
-          ZIP_FILE_NAME="${REPO_NAME}-fivem-${{ github.ref_name }}.zip"
+          RELEASE_TAG_NAME="${{ github.event.release.tag_name }}"
+          ZIP_FILE_NAME="${REPO_NAME}-fivem-${RELEASE_TAG_NAME}.zip"
 
           SOURCE_FOLDER_TO_ZIP="platformResourcePresets/fiveM/"
 
@@ -64,25 +93,37 @@ jobs:
           echo "ZIP file will be named: $ZIP_FILE_NAME"
           echo "Top-level folder inside ZIP will be: $REPO_NAME/"
           
-          cd "$SOURCE_FOLDER_TO_ZIP"
-          mkdir -p "../../${REPO_NAME}"
-          cp -r * "../../${REPO_NAME}"
+          # 1. Erstelle ein temporäres Verzeichnis im Workflow-Root
+          TEMP_DIR="${REPO_NAME}-temp-fivem"
+          mkdir -p "../../${TEMP_DIR}"
+          
+          # 2. Kopiere den Inhalt von 'fiveM/' in das temporäre Verzeichnis
+          (
+            cd "$SOURCE_FOLDER_TO_ZIP"
+            cp -r * "../../${TEMP_DIR}"
+          )
+
+          # 3. Wechsle zurück ins Root-Verzeichnis des Workflows
           cd ../../
-          zip -r "$ZIP_FILE_NAME" "$REPO_NAME"/
+
+          # 4. Zippe das umbenannte temporäre Verzeichnis
+          zip -r "$ZIP_FILE_NAME" "$TEMP_DIR"/
+          
           echo "Successfully created ZIP: $ZIP_FILE_NAME"
           ls -l "$ZIP_FILE_NAME"
+          
+          # Temporäres Verzeichnis aufräumen
+          rm -rf "$TEMP_DIR"
+
+          # Exportiere den ZIP-Dateinamen als Output dieses Schrittes
+          echo "FIVEM_ZIP_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_OUTPUT
 
         shell: bash
 
-      - name: Create GitHub Release
+      - name: Upload Release Assets to Existing Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ github.ref_name }}-assets
-          name: Release ${{ github.ref_name }} (Build Assets)
-          draft: false
-          prerelease: false
-          generate_release_notes: true
+          id: ${{ github.event.release.id }}
           files: |
-            ${{ github.event.repository.name }}-altv-${{ github.ref_name }}.zip
-            ${{ github.event.repository.name }}-fivem-${{ github.ref_name }}.zip
+            ${{ steps.create_altv_zip.outputs.ALT_ZIP_FILE_NAME }}
+            ${{ steps.create_fivem_zip.outputs.FIVEM_ZIP_FILE_NAME }}
