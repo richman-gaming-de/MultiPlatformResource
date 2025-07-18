@@ -6,7 +6,7 @@ on:
 
 jobs:
   build_and_attach_assets:
-    runs-on: [ self-hosted, richman-gaming ]
+    runs-on: ubuntu-latest
     permissions:
       contents: write # Erlaubt dem Workflow, Assets zu einem Release hinzuzufügen
 
