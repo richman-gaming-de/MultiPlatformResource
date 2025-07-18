@@ -29,6 +29,7 @@ jobs:
         shell: bash
 
       - name: Create AltV Release Archive (ZIP)
+        id: create_altv_zip
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
           ZIP_FILE_NAME="${REPO_NAME}-altv-${{ github.ref_name }}.zip"
@@ -47,6 +48,9 @@ jobs:
           echo "Successfully created ZIP: $ZIP_FILE_NAME"
           ls -l "$ZIP_FILE_NAME"
 
+          # Exportiere den ZIP-Dateinamen als Output dieses Schrittes
+          echo "ALT_ZIP_FILE_NAME=$ZIP_FILE_NAME" >> "$GITHUB_OUTPUT"
+
         shell: bash
 
       # --- FiveM Build und ZIP-Erstellung ---
@@ -62,6 +66,7 @@ jobs:
         shell: bash
 
       - name: Create FiveM Release Archive (ZIP)
+        id: create_fivem_zip
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
           ZIP_FILE_NAME="${REPO_NAME}-fivem-${{ github.ref_name }}.zip"
@@ -79,6 +84,9 @@ jobs:
           zip -r "$ZIP_FILE_NAME" "$REPO_NAME"/
           echo "Successfully created ZIP: $ZIP_FILE_NAME"
           ls -l "$ZIP_FILE_NAME"
+
+          # Exportiere den ZIP-Dateinamen als Output dieses Schrittes
+          echo "FIVEM_ZIP_FILE_NAME=$ZIP_FILE_NAME" >> "$GITHUB_OUTPUT"
 
         shell: bash
 
