@@ -42,6 +42,7 @@ jobs:
           
           cd "$SOURCE_FOLDER_TO_ZIP"
           mkdir -p "../../${REPO_NAME}"
+          rm -rf * "../../${REPO_NAME}"
           cp -r * "../../${REPO_NAME}"
           cd ../../
           zip -r "$ZIP_FILE_NAME" "$REPO_NAME"/
@@ -79,6 +80,7 @@ jobs:
           
           cd "$SOURCE_FOLDER_TO_ZIP"
           mkdir -p "../../${REPO_NAME}"
+          rm -rf * "../../${REPO_NAME}"
           cp -r * "../../${REPO_NAME}"
           cd ../../
           zip -r "$ZIP_FILE_NAME" "$REPO_NAME"/
